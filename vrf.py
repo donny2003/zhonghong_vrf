@@ -17,11 +17,11 @@ acs = []
 def setConfig():
     global CONFIG
     CONFIG = {}
-    CONFIG['broker'] = "192.168.123.10"
+    CONFIG['broker'] = "192.168.18.27"
     CONFIG['port'] = 1883
-    CONFIG['gateway'] = "192.168.123.251"
-    CONFIG['username'] = "mqtt"
-    CONFIG['password'] = "mqtt"
+    CONFIG['gateway'] = "192.168.18.88"
+    CONFIG['username'] = "pulo"
+    CONFIG['password'] = "667788"
 
 def loadConfig(CONFIG_PATH = '/data/options.json'):
     global CONFIG
