@@ -20,8 +20,8 @@ def setConfig():
     CONFIG['broker'] = "uniap.pulo.cc"
     CONFIG['port'] = 1883
     CONFIG['gateway'] = "192.168.18.88"
-    CONFIG['username'] = "mqtt"
-    CONFIG['password'] = "mqtt"
+    CONFIG['username'] = "pulo"
+    CONFIG['password'] = "667788"
 
 def loadConfig(CONFIG_PATH = '/data/options.json'):
     global CONFIG
@@ -164,7 +164,7 @@ def createClimate(object_id, name = None, device_class = None, icon = None, temp
     device["manufacturer"] = "xswxm"
     device["model"] = "V100"
     device["sw_version"] = "0.3.0"
-    
+
     topic = "{0}/{1}/{2}/{3}/config".format(discovery_prefix, component, node_id, object_id)
 
     payload = {}
@@ -216,7 +216,7 @@ def removeClimate(object_id, node_id = "zhonghong", component = "climate", disco
 def syncACList(client, node_id = "zhonghong", component = "climate", discovery_prefix = "homeassistant"):
     global STATES, acs
     acs_temp = getACList()
-    
+
     for i in range(len(acs)):
         object_id = "ac_{0}".format(acs[i]['idx'])
         if acs[i]['on'] != acs_temp[i]['on'] or acs[i]['mode'] != acs_temp[i]['mode']:
@@ -254,7 +254,8 @@ if __name__ == '__main__':
         initializeClimates(client)
         time.sleep(1)
         count = count - 1
-    
+
     while True:
         syncACList(client)
         time.sleep(1)
+

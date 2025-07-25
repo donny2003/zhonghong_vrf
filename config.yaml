@@ -16,8 +16,8 @@ image https://github.com/donny2003/zhonghong_vrf/blob/master/icon.png
 options:
   broker: "192.168.18.27"
   port: "1883"
-  username: "pulo"
-  password: "667788"
+  username: "mqtt"
+  password: "mqtt"
   gateway: "192.168.18.88"
 schema:
   broker: str
