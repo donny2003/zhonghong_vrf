@@ -8,30 +8,9 @@ from paho.mqtt import client as mqtt_client
 
 logging.basicConfig(level=logging.INFO)
 
-# 修复后的STATES字典
-STATES = {
-    'on': {0:'OFF', 1:'ON', 'OFF':0, 'ON':1},
-    'mode': {0:'off', 1:'cool', 2:'dry', 4:'fan_only', 8:'heat', 'off':0, 'cool':1, 'dry':2, 'fan_only':4, 'heat':8},
-    'fan': {
-        0: 'auto',
-        1: 'high',
-        2: 'medium',
-        4: 'low',
-        5: 'turbo',  # 新增5键
-        6: 'silent',
-        'auto': 0,
-        'high': 1,
-        'medium': 2,
-        'low': 4,
-        'turbo': 5,  # 新增
-        'silent': 6   # 修正原silent映射
-    }
-}
-
-#STATES = {'on':{0:'OFF', 1:'ON','OFF':0,'ON':1},
-#    'mode':{0:'off',1:'cool',2:'dry',4:'fan_only',8:'heat','off':0,'cool':1,'dry':2,'fan_only':4,'heat':8},
-#    'fan':{0:'auto',1:'high',2:'medium',4:'low',6:'silent','auto':0,'high':1,'medium':2,'low':4,'silent':8}}
-
+STATES = {'on':{0:'OFF', 1:'ON','OFF':0,'ON':1},
+    'mode':{0:'off',1:'cool',2:'dry',4:'fan_only',8:'heat','off':0,'cool':1,'dry':2,'fan_only':4,'heat':8},
+    'fan':{0:'auto',1:'high',2:'medium',4:'low',6:'silent','auto':0,'high':1,'medium':2,'low':4,'silent':8}}
 CONFIG = {}
 acs = []
 
@@ -41,8 +20,8 @@ def setConfig():
     CONFIG['broker'] = "uniap.pulo.cc"
     CONFIG['port'] = 1883
     CONFIG['gateway'] = "192.168.18.88"
-    CONFIG['username'] = "mqtt"
-    CONFIG['password'] = "mqtt"
+    CONFIG['username'] = "pulo"
+    CONFIG['password'] = "667788"
 
 def loadConfig(CONFIG_PATH = '/data/options.json'):
     global CONFIG
@@ -210,8 +189,7 @@ def createClimate(object_id, name = None, device_class = None, icon = None, temp
     payload["fan_modes"] = [
 		"low",
 		"medium",
-		"high",
-		"turbo"  # 添加新风扇模式
+		"high"
 	]
     # payload["min_temp"] = 16.0
     payload["max_temp"] = 29.0
