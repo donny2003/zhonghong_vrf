@@ -2,13 +2,14 @@ name: Publish Multi-Arch Docker Image
 
 on:
   push:
-    branches: [ main ] 
-  workflow_dispatch: 
+    branches: [ main ]
+  workflow_dispatch:
 
+# 1. 在这里添加 GITHUB_SHA 变量，用于生成唯一版本号
 env:
-  # 修改这里为你 Dockerfile 中定义的镜像名
-  # 例如如果你的 Dockerfile 里是 FROM python:3.9, 这里可以保持默认或自定义
-  IMAGE_NAME: zhonghong_vrf 
+  IMAGE_NAME: zhonghong_vrf
+  # 这个变量会自动获取当前提交的 Commit ID (例如: a1b2c3d)
+  IMAGE_TAG: ${{ github.sha }} 
 
 jobs:
   docker:
@@ -17,32 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ===================================================================
-      # === 关键新增：设置 QEMU 以支持多架构模拟 ===
-      # ===================================================================
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-        with:
-          # 这会自动注册 binfmt_misc，让 Docker 能模拟其他架构
-          platforms: all 
 
-      # ===================================================================
-      # === 关键新增：设置 Buildx ===
-      # ===================================================================
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          # 可选：配置缓存，加速构建
-          buildx-version: latest 
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest,enable=true
-            type=raw,value="\{\{.ShortSha\}\}",enable=true
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -50,19 +30,27 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ===================================================================
-      # === 关键修改：Build and push (注意 platforms 参数) ===
-      # ===================================================================
+      # 2. 简化 Docker meta 步骤
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # 始终生成一个 latest 标签
+            type=raw,value=latest
+            
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # --- 核心配置：指定要构建的平台 ---
+          # 3. 在这里组合标签：同时打上 latest 和 唯一的 Commit ID 标签
+          # 结果示例：你的镜像会同时拥有 v1.0:latest 和 v1.0:git-<commit_id> 两个标签
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}-${{ env.IMAGE_TAG }}
           platforms: |
-            linux/amd64,    # Intel/AMD 64位 (x86)
-            linux/arm64,    # ARM 64位 (如 树莓派4, Apple M1, 大多数现代 NAS)
-            linux/arm/v7    # ARM 32位 v7 (如 树莓派3, 旧款 Home Assistant 设备)
-          # -----------------------------
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
