@@ -16,6 +16,7 @@ STATES = {
         0: 'auto',
         1: 'high',
         2: 'medium',
+        3: 'low',  # 新增这一行，解决报错		
         4: 'low',
         5: 'turbo',  # 新增5键
         6: 'silent',
@@ -175,7 +176,9 @@ def initializeClimates(client, node_id = "zhonghong", component = "climate", dis
         msg = int(ac['tempIn'])
         publish(client, topic, msg)
         topic = "{0}/{1}/{2}/{3}/{4}/state".format(discovery_prefix, component, node_id, object_id, 'fan')
-        msg = STATES['fan'][ac['fan']]
+        #msg = STATES['fan'][ac['fan']]
+        # 如果 ac['fan'] 的值在 STATES 里找不到，就默认显示为 'auto'
+        msg = STATES['fan'].get(ac['fan'], 'auto')		
         publish(client, topic, msg)
 
 def createClimate(object_id, name = None, device_class = None, icon = None, temperature_unit = "C", node_id = "zhonghong", component = "climate", discovery_prefix = "homeassistant"):
