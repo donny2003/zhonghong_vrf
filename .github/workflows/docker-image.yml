@@ -42,7 +42,7 @@ jobs:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable=true
-            type=raw,value='{{.ShortSha}}',enable=true # <-- 加上单引号即可
+            type=raw,value="\{\{.ShortSha\}\}",enable=true
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
