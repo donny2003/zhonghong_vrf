@@ -20,8 +20,8 @@ def setConfig():
     CONFIG['broker'] = "uniap.pulo.cc"
     CONFIG['port'] = 1883
     CONFIG['gateway'] = "192.168.18.88"
-    CONFIG['username'] = "pulo"
-    CONFIG['password'] = "667788"
+    CONFIG['username'] = "mqtt"
+    CONFIG['password'] = "mqtt"
 
 def loadConfig(CONFIG_PATH = '/data/options.json'):
     global CONFIG
