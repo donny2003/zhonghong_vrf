@@ -216,9 +216,9 @@ def createClimate(client, object_id, name=None, device_class=None, icon=None,
     device = {}
     device["identifiers"] = ["ZhongHong VRF"]
     device["name"] = "ZhongHong VRF"
-    device["manufacturer"] = "xswxm"
+    device["manufacturer"] = "donny"
     device["model"] = "V100"
-    device["sw_version"] = "0.3.0"
+    device["sw_version"] = "0.3.1"
 
     topic = "{0}/{1}/{2}/{3}/config".format(
         discovery_prefix, component, node_id, object_id)
