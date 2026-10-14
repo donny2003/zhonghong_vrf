@@ -141,27 +141,30 @@ def getACList():
     api = 'http://{0}/cgi-bin/api.html?f=17&p={1}'
     i = 0
     acs_temp = []
+
+    # 关键：创建 session 并禁用环境变量代理，避免内网请求被送到 HTTP 代理
+    session = requests.Session()
+    session.trust_env = False
+
     while True:
+        url = api.format(CONFIG['gateway'], i)
         try:
-            r = requests.get(api.format(CONFIG['gateway'], i),
-                             auth=('admin', ''),
-                             proxies={'http': None, 'https': None})
+            r = session.get(url, auth=('admin', ''), timeout=5)
             msg = json.loads(r.text)
             if msg['err'] == 0 and len(msg['unit']) > 0:
                 for m in msg['unit']:
                     acs_temp.append(m)
             else:
+                logging.info("getACList: err={0}, unit_len={1}, stop".format(
+                    msg.get('err'), len(msg.get('unit', []))))
                 break
         except Exception as e:
-            r = str(e)
-            if "('Connection aborted.', BadStatusLine('" in r:
-                msg = json.loads(r[39:-3])
-                if msg['err'] == 0 and len(msg['unit']) > 0:
-                    for m in msg['unit']:
-                        acs_temp.append(m)
-                else:
-                    break
+            # 网关离线 / 超时 / 解析失败，打印具体原因后退出本轮
+            logging.info("getACList: exception={0}".format(str(e)))
+            break
         i = i + 1
+
+    logging.info("getACList: total={0}".format(len(acs_temp)))
     return acs_temp
 
 
@@ -172,14 +175,11 @@ def setAC(ac):
     logging.info(" {0}: Set: {1}".format(
         time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), api))
     try:
-        requests.get(api, auth=('admin', ''),
-                     proxies={'http': None, 'https': None})
+        session = requests.Session()
+        session.trust_env = False
+        session.get(api, auth=('admin', ''), timeout=5)
     except Exception as e:
-        msg = str(e)
-        if "('Connection aborted.', BadStatusLine('" in msg:
-            msg = ''
-        else:
-            msg = ''
+        logging.info("setAC: exception={0}".format(str(e)))
 
 
 def initializeClimates(client, node_id="zhonghong", component="climate",
@@ -229,7 +229,7 @@ def createClimate(client, object_id, name=None, device_class=None, icon=None,
     payload["force_update"] = True
 
     payload["unique_id"] = "{0}_{1}".format(node_id, object_id)
-    # ===== 关键修改：object_id -> default_entity_id，必须带 climate. 前缀 =====
+    # HA 2026.4 起必须使用 default_entity_id，且必须带 climate. 域前缀
     payload["default_entity_id"] = "climate.{0}_{1}".format(node_id, object_id)
 
     if icon is not None:
@@ -241,11 +241,10 @@ def createClimate(client, object_id, name=None, device_class=None, icon=None,
     payload["modes"] = ["heat", "cool", "dry", "fan_only", "off"]
     payload["fan_modes"] = ["low", "medium", "high", "turbo"]
     payload["max_temp"] = 29.0
-    # min_temp 未设置时 HA 默认为 7，可按需启用
     # payload["min_temp"] = 16.0
 
-    # 注意：HA 2026.4 起 MQTT Climate 已移除 power_command_topic / power_state_topic
-    # 开关机由 mode 的 off 控制，无需再配置 power_command_topic
+    # HA 2026.4 已移除 power_command_topic / power_state_topic
+    # 开关机由 mode 的 off 控制
     payload["mode_command_topic"] = "{0}/{1}/{2}/{3}/mode/set".format(
         discovery_prefix, component, node_id, object_id)
     payload["temperature_command_topic"] = "{0}/{1}/{2}/{3}/temp/set".format(
@@ -285,6 +284,10 @@ def syncACList(client, node_id="zhonghong", component="climate",
                discovery_prefix="homeassistant"):
     global STATES, acs
     acs_temp = getACList()
+
+    # 网关离线或未取到数据，跳过本轮，避免误操作与刷屏
+    if len(acs_temp) == 0:
+        return
 
     # 数量不一致时重新初始化
     if len(acs_temp) != len(acs):
